@@ -1,5 +1,6 @@
 from .request import HttpRequest
 from .response import HttpResponse
+from .utility import parse_request
 import socket
 
 class HttpServer:
@@ -23,22 +24,9 @@ class HttpServer:
     def start_connection(self, size : int = 1024) -> None:
         if self.__socket != None:
             self.__connection, address = self.__socket.accept()
-            data = str(self.__connection.recv(size), 'utf-8').split('\r\n')
-
-            message = data[0].split(' ')
-            methode = message[0].strip()
-            resource = message[1].strip()
-
-            headers = None
-            if len(data) > 1:
-                headers = {}
-                for header in data[1:]:
-                    if header.strip() != "":
-                        header = header.strip().split(" ")
-                        key = header[0].replace(":", "").replace("-", "")
-                        value = header[1]
-                        headers[key] = value
-
+            
+            methode, resource, headers = parse_request(self.__connection.recv(size))
+            
             if headers is not None:
                 self.__request = HttpRequest(methode, resource, **headers)
             else:
