@@ -1,11 +1,17 @@
 from .message import HttpMessage
+from .methods import Method
 
 class HttpRequest(HttpMessage):
     """
     
     """
 
-    methods = {'GET', 'POST'}
+    _methods = {
+        Method.GET : 'get',
+        Method.POST : 'post',
+        Method.DELETE : 'delete',
+        Method.PUT : 'put'
+    }
     
     def __init__(self, methode : str, resource : str, **headers):
         self.__message = f"{methode.strip() if methode.upper() in self.methods else 'GET'} {resource.strip()}"

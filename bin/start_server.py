@@ -6,8 +6,6 @@ def main():
     ADDR = ("localhost", 1234)
     
     server = HttpServer(ADDR, reuse_port=True)
-    server.create_server()
-    
 
     while True:
         server.start_connection()

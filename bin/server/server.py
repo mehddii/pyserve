@@ -1,42 +1,58 @@
+import socket
+import logging
+
 from .request import HttpRequest
 from .response import HttpResponse
 from .utility import parse_request
-import socket
+
+
+logging.getLogger(__name__)
+
 
 class HttpServer:
     """
     
     """
     
-    def __init__(self, adress : tuple[str, int], **kwargs) -> None:
-        self.__address    = adress
-        self.__param      = kwargs
-        self.__socket     = None
-        self.__connection = None
-        self.__request    = None 
-    
-    def create_server(self) -> None:
-        if self.__socket == None:
-            self.__socket : socket.Socket = socket.create_server(self.__address, **self.__param)
-        else:
-            raise RuntimeError('Server is already running')
+    def __init__(self, host : str, port : int) -> None:
+        self.__host : str                        = host
+        self.__port : int                        = port
+        self.__address : tuple[str, int]         = (host, port)
+        self.__socket  : socket.socket           = socket.create_server(self.__address, reuse_port=True)
+        self.__connection : None | socket.socket = None
+        #self.__request    = None 
 
-    def start_connection(self, size : int = 1024) -> None:
-        if self.__socket != None:
-            self.__connection, address = self.__socket.accept()
+    def start_connection(self) -> None:        
+        if self.__socket is not None:
+            logging.info(f"Starting server at http:://{self.__host}:{self.__port}")
             
-            methode, resource, headers = parse_request(self.__connection.recv(size))
+            self.__connection, address = self.__socket.accept()
+            logging.info(f'Connecting to {address}')
+            
+            request = ''
+            while True:
+                data = self.__connection.recv(1024)
+                
+                if data == None:
+                    break
+                
+                request += data
+            
+            methode, resource, headers = parse_request(request)
+            
             
             if headers is not None:
                 self.__request = HttpRequest(methode, resource, **headers)
             else:
-                self.__request = HttpRequest(methode, resource)          
+                self.__request = HttpRequest(methode, resource) 
+                
+            logging.info(self.__request.get_message())         
         else:
             raise RuntimeError('No server is running on this address')
         
-    def send(self, request : HttpResponse | HttpResponse) -> None:
+    def send(self, response : HttpResponse) -> None:
         try:
-            self.__connection.sendall(request.bytes())
+            self.__connection.sendall(response.bytes())
         except AttributeError:
             raise RuntimeError('Connection is not established')
         self.close()
