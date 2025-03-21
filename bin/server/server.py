@@ -1,9 +1,9 @@
 import socket
 import logging
 
-from .request import HttpRequest
+from .request  import HttpRequest
 from .response import HttpResponse
-from .utility import parse_request
+from .utility  import parse_request
 
 
 logging.getLogger(__name__)
